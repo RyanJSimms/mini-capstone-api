@@ -1,31 +1,47 @@
 class ProductsController < ApplicationController
-  def all_products_method
+  before_action :authenticate_admin, except: [:index, :show]
+
+  def index
     products = Product.all
-    render json: products.as_json
+    render json: products
   end
 
-  def select_product_method_1
-    product = Product.first
-    render json: product.as_json
+  def create
+    product = Product.new(
+      name: params[:name],
+      price: params[:price],
+      description: params[:description],
+      inventory: params[:inventory],
+      supplier_id: params[:supplier_id],
+    )
+    if product.save
+      Image.create(product_id: product.id, url: params[:image_url])
+      render json: product
+    else
+      render json: { errors: product.errors.full_messages }, status: 422
+    end
   end
 
-  def select_product_method_2
-    product = Product.second
-    render json: product.as_json
+  def show
+    product = Product.find_by(id: params[:id])
+    render json: product
   end
 
-  def select_product_method_3
-    product = Product.third
-    render json: product.as_json
+  def update
+    product = Product.find_by(id: params[:id])
+    product.name = params[:name] || product.name
+    product.price = params[:price] || product.price
+    product.description = params[:description] || product.description
+    if product.save
+      render json: product
+    else
+      render json: { errors: product.errors.full_messages }, status: 422
+    end
   end
 
-  def select_product_method_4
-    product = Product.fourth
-    render json: product.as_json
-  end
-
-  def select_product_method_5
-    product = Product.fifth
-    render json: product.as_json
+  def destroy
+    product = Product.find_by(id: params[:id])
+    product.destroy
+    render json: { message: "Product successfully destroyed." }
   end
 end
